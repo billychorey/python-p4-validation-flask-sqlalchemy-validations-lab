@@ -12,16 +12,28 @@ class Author(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
 
-    @validates('name', 'phone_number')
-    def validate_author(self, key, value):
-        if key == 'name' and not value:
+    @validates('name')
+    def validate_name(self, key, value):
+        if not value:
             raise ValueError("Name cannot be null")
-        if key == 'phone_number' and len(value) != 10:
-            raise ValueError("Phone number must be exactly 10 digits")
+        
+        # Check if the name already exists in the database
+        existing_author = Author.query.filter_by(name=value).first()
+        if existing_author:
+            raise ValueError(f"Author with name '{value}' already exists.")
+        
         return value
 
+    @validates('phone_number')
+    def validate_phone_number(self, key, value):
+        if len(value) != 10:
+            raise ValueError("Phone number must be exactly 10 digits")
+        if not value.isdigit():
+            raise ValueError("Phone number must contain only digits")
+        return value
+    
     def __repr__(self):
-        return f'Author(id={self.id}, name={self.name})'
+            return f'Author(id={self.id}, name={self.name})'
 
 class Post(db.Model):
     __tablename__ = 'posts'
